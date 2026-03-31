@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: pomodoro
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pomodoro
+    username: pomodoro
+    password: pomodoro
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+server:
+  port: 8080
