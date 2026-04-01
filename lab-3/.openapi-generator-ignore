@@ -17,3 +17,5 @@ src/main/kotlin/org/nechaev/pomodoro/delegate/**
 src/main/kotlin/org/nechaev/pomodoro/entity/**
 src/main/kotlin/org/nechaev/pomodoro/repository/**
 src/main/kotlin/org/openapitools/Application.kt
+prometheus.yml
+grafana/**

@@ -1,6 +1,6 @@
 package org.nechaev.pomodoro.delegate
 
-import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.MeterRegistry
 import org.nechaev.pomodoro.api.TimersApiDelegate
 import org.nechaev.pomodoro.entity.TimerEntity
@@ -16,19 +16,43 @@ import java.time.Instant
 @Service
 class TimersApiDelegateImpl(
     private val timerRepository: TimerRepository,
-    meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry
 ) : TimersApiDelegate {
 
-    private val createdCounter: Counter = meterRegistry.counter("pomodoro.timers.created")
-    private val startedCounter: Counter = meterRegistry.counter("pomodoro.timers.started")
-    private val stoppedCounter: Counter = meterRegistry.counter("pomodoro.timers.stopped")
-    private val completedCounter: Counter = meterRegistry.counter("pomodoro.timers.completed")
-    private val notFoundErrors: Counter = meterRegistry.counter("pomodoro.timer.errors", "type", "not_found")
-    private val conflictErrors: Counter = meterRegistry.counter("pomodoro.timer.errors", "type", "conflict")
+    // Продуктовые счётчики операций
+    private val createdCounter = meterRegistry.counter("pomodoro.op.create")
+    private val startedCounter = meterRegistry.counter("pomodoro.op.start")
+    private val stoppedCounter = meterRegistry.counter("pomodoro.op.stop")
+    private val completedCounter = meterRegistry.counter("pomodoro.op.complete", "reason", "manual")
+    private val autoCompletedCounter = meterRegistry.counter("pomodoro.op.complete", "reason", "expired")
+    private val notFoundErrors = meterRegistry.counter("pomodoro.op.error", "type", "not_found")
+    private val conflictErrors = meterRegistry.counter("pomodoro.op.error", "type", "conflict")
+
+    // Распределение длительности создаваемых таймеров (в минутах)
+    private val durationSummary: DistributionSummary = DistributionSummary.builder("pomodoro.timer.duration")
+        .description("Длительность создаваемых таймеров в минутах")
+        .baseUnit("minutes")
+        .publishPercentileHistogram()
+        .register(meterRegistry)
 
     init {
-        meterRegistry.gauge("pomodoro.timers.active", timerRepository) { repo ->
+        // Gauge: текущее число активных (RUNNING) таймеров
+        meterRegistry.gauge("pomodoro.gauge.running", timerRepository) { repo ->
             repo.countByStatus(TimerStatus.RUNNING).toDouble()
+        }
+        // Gauge: общее число таймеров в системе
+        meterRegistry.gauge("pomodoro.gauge.all", timerRepository) { repo ->
+            repo.count().toDouble()
+        }
+        // Gauge: число таймеров, ожидающих запуска (CREATED)
+        meterRegistry.gauge("pomodoro.gauge.pending", timerRepository) { repo ->
+            repo.countByStatus(TimerStatus.CREATED).toDouble()
+        }
+        // Gauge: доля завершённых таймеров (completion rate)
+        meterRegistry.gauge("pomodoro.gauge.completion.rate", timerRepository) { repo ->
+            val total = repo.count().toDouble()
+            if (total == 0.0) 0.0
+            else repo.countByStatus(TimerStatus.COMPLETED).toDouble() / total
         }
     }
 
@@ -44,6 +68,7 @@ class TimersApiDelegateImpl(
         )
         val saved = timerRepository.save(entity)
         createdCounter.increment()
+        durationSummary.record(entity.durationMinutes.toDouble())
         return ResponseEntity.status(HttpStatus.CREATED).body(saved.toDto())
     }
 
@@ -62,8 +87,9 @@ class TimersApiDelegateImpl(
 
         entity.status = TimerStatus.RUNNING
         entity.startedAt = Instant.now()
+        val saved = timerRepository.save(entity)
         startedCounter.increment()
-        return ResponseEntity.ok(timerRepository.save(entity).toDto())
+        return ResponseEntity.ok(saved.toDto())
     }
 
     override fun stopTimer(id: Long): ResponseEntity<Timer> {
@@ -76,8 +102,9 @@ class TimersApiDelegateImpl(
 
         entity.accumulateElapsed()
         entity.status = TimerStatus.PAUSED
+        val saved = timerRepository.save(entity)
         stoppedCounter.increment()
-        return ResponseEntity.ok(timerRepository.save(entity).toDto())
+        return ResponseEntity.ok(saved.toDto())
     }
 
     override fun completeTimer(id: Long): ResponseEntity<Timer> {
@@ -90,8 +117,9 @@ class TimersApiDelegateImpl(
 
         entity.accumulateElapsed()
         entity.status = TimerStatus.COMPLETED
+        val saved = timerRepository.save(entity)
         completedCounter.increment()
-        return ResponseEntity.ok(timerRepository.save(entity).toDto())
+        return ResponseEntity.ok(saved.toDto())
     }
 
     private fun findTimerOrThrow(id: Long): TimerEntity {
@@ -106,7 +134,7 @@ class TimersApiDelegateImpl(
             accumulateElapsed()
             status = TimerStatus.COMPLETED
             timerRepository.save(this)
-            completedCounter.increment()
+            autoCompletedCounter.increment()
         }
         return this
     }
