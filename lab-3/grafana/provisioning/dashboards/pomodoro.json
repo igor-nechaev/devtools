@@ -1,0 +1,107 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Всего таймеров в системе",
+      "description": "Gauge: общее число таймеров в БД",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "targets": [{ "expr": "pomodoro_gauge_all", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "blue", "value": null }] } }, "overrides": [] }
+    },
+    {
+      "title": "Созданные таймеры",
+      "description": "Counter: pomodoro_op_create_total",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 },
+      "targets": [{ "expr": "pomodoro_op_create_total", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }] } }, "overrides": [] }
+    },
+    {
+      "title": "Завершённые таймеры",
+      "description": "Сумма ручных и автоматических завершений.\nЗапрос: sum(pomodoro_op_complete_total)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 },
+      "targets": [{ "expr": "sum(pomodoro_op_complete_total)", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "purple", "value": null }] } }, "overrides": [] }
+    },
+    {
+      "title": "Активные таймеры (RUNNING)",
+      "description": "Gauge: сколько таймеров сейчас запущено",
+      "type": "gauge",
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 0 },
+      "targets": [{ "expr": "pomodoro_gauge_running", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "max": 20, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 5 }, { "color": "red", "value": 10 }] } }, "overrides": [] }
+    },
+    {
+      "title": "Ожидают запуска (CREATED)",
+      "description": "Gauge: таймеры созданы, но ещё не запущены",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 0 },
+      "targets": [{ "expr": "pomodoro_gauge_pending", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "yellow", "value": null }] } }, "overrides": [] }
+    },
+    {
+      "title": "Доля завершённых (%)",
+      "description": "Completion rate: какой % таймеров доведён до конца.\nЗапрос: pomodoro_gauge_completion_rate * 100",
+      "type": "gauge",
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "targets": [{ "expr": "pomodoro_gauge_completion_rate * 100", "legendFormat": "" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 40 }, { "color": "green", "value": 70 }] } }, "overrides": [] }
+    },
+    {
+      "title": "Скорость операций (rate/sec за 5 мин)",
+      "description": "rate() по каждому типу операции за скользящее окно 5 мин",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "targets": [
+        { "expr": "rate(pomodoro_op_create_total[5m])", "legendFormat": "создание" },
+        { "expr": "rate(pomodoro_op_start_total[5m])", "legendFormat": "запуск" },
+        { "expr": "rate(pomodoro_op_stop_total[5m])", "legendFormat": "пауза" },
+        { "expr": "sum(rate(pomodoro_op_complete_total[5m]))", "legendFormat": "завершение" }
+      ]
+    },
+    {
+      "title": "Завершения: ручные vs автоматические",
+      "description": "rate(pomodoro_op_complete_total{reason=...}[5m])\nЕсли автозавершений больше — пользователи не нажимают complete",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        { "expr": "rate(pomodoro_op_complete_total{reason=\"manual\"}[5m])", "legendFormat": "ручное" },
+        { "expr": "rate(pomodoro_op_complete_total{reason=\"expired\"}[5m])", "legendFormat": "по истечении времени" }
+      ]
+    },
+    {
+      "title": "Ошибки по типу (increase за 5 мин)",
+      "description": "not_found — обращение к несуществующему таймеру\nconflict — недопустимый переход состояния",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "targets": [
+        { "expr": "increase(pomodoro_op_error_total{type=\"not_found\"}[5m])", "legendFormat": "не найден (404)" },
+        { "expr": "increase(pomodoro_op_error_total{type=\"conflict\"}[5m])", "legendFormat": "конфликт состояния (409)" }
+      ]
+    },
+    {
+      "title": "Распределение длительности таймеров",
+      "description": "histogram_quantile по гистограмме длительности.\nМедиана и p95 — какие таймеры создают чаще",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, rate(pomodoro_timer_duration_minutes_bucket[5m]))", "legendFormat": "медиана (p50)" },
+        { "expr": "histogram_quantile(0.95, rate(pomodoro_timer_duration_minutes_bucket[5m]))", "legendFormat": "p95" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "m" }, "overrides": [] }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["pomodoro"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "5s",
+  "title": "Pomodoro Timer Service",
+  "uid": "pomodoro-dashboard"
+}

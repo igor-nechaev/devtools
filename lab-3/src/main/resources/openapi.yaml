@@ -1,0 +1,368 @@
+openapi: 3.0.3
+info:
+  contact:
+    name: Нечаев Игорь Сергеевич
+  description: |
+    REST API для управления таймерами по технике помидоро. Сервис позволяет создавать таймеры с настраиваемой длительностью, запускать и приостанавливать их, а также отслеживать оставшееся время в реальном времени с учётом всех пауз. Состояния таймера: CREATED → RUNNING → PAUSED → COMPLETED. Допускаются переходы: start (из CREATED/PAUSED), stop (из RUNNING), complete (из любого, кроме COMPLETED). Таймер автоматически завершается при истечении времени.
+  license:
+    name: MIT
+  title: Pomodoro Timer Service
+  version: 1.0.0
+servers:
+- description: Локальный сервер разработки
+  url: http://localhost:8080
+tags:
+- description: Операции с таймерами помидоро
+  name: timers
+paths:
+  /timers:
+    get:
+      description: Возвращает все созданные таймеры с актуальным значением оставшегося
+        времени.
+      operationId: getAllTimers
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+              - id: 1
+                name: Работа
+                status: RUNNING
+                durationMinutes: 25
+                remainingSeconds: 1230
+              - id: 2
+                name: Перерыв
+                status: CREATED
+                durationMinutes: 5
+                remainingSeconds: 300
+              schema:
+                items:
+                  $ref: '#/components/schemas/Timer'
+                type: array
+          description: Список таймеров
+      summary: Получение списка всех таймеров
+      tags:
+      - timers
+    post:
+      description: |
+        Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.
+        Таймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.
+      operationId: createTimer
+      requestBody:
+        content:
+          application/json:
+            examples:
+              default:
+                summary: Стандартный помидоро (25 минут)
+                value:
+                  name: Работа
+              short:
+                summary: Короткий перерыв
+                value:
+                  name: Перерыв
+                  durationMinutes: 5
+            schema:
+              $ref: '#/components/schemas/CreateTimerRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              example:
+                id: 1
+                name: Работа
+                status: CREATED
+                durationMinutes: 25
+                remainingSeconds: 1500
+              schema:
+                $ref: '#/components/schemas/Timer'
+          description: Таймер успешно создан
+        "400":
+          content:
+            application/json:
+              example:
+                message: Поле 'name' обязательно для заполнения
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: "Некорректный запрос (например, не указано имя)"
+      summary: Создание нового таймера
+      tags:
+      - timers
+  /timers/{id}:
+    get:
+      description: |
+        Возвращает таймер с актуальным значением `remainingSeconds`.
+        Для запущенного таймера оставшееся время пересчитывается при каждом запросе.
+      operationId: getTimerById
+      parameters:
+      - description: Уникальный идентификатор таймера
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 1
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timer'
+          description: Таймер найден
+        "404":
+          content:
+            application/json:
+              example:
+                message: Таймер с id=99 не найден
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Таймер с указанным ID не найден
+      summary: Получение таймера по идентификатору
+      tags:
+      - timers
+  /timers/{id}/start:
+    post:
+      description: |
+        Переводит таймер в состояние RUNNING и начинает отсчёт времени.
+        Допускается из состояний CREATED и PAUSED. При возобновлении после паузы
+        отсчёт продолжается с того места, где был остановлен.
+      operationId: startTimer
+      parameters:
+      - description: Уникальный идентификатор таймера
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 1
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timer'
+          description: Таймер запущен
+        "404":
+          content:
+            application/json:
+              example:
+                message: Таймер с id=99 не найден
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Таймер с указанным ID не найден
+        "409":
+          content:
+            application/json:
+              example:
+                message: Таймер уже завершён
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Операция невозможна в текущем состоянии таймера
+      summary: Запуск таймера
+      tags:
+      - timers
+  /timers/{id}/stop:
+    post:
+      description: |
+        Переводит таймер в состояние PAUSED. Накопленное время текущей сессии
+        сохраняется, и при следующем запуске отсчёт продолжится с того же значения.
+        Допускается только из состояния RUNNING.
+      operationId: stopTimer
+      parameters:
+      - description: Уникальный идентификатор таймера
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 1
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timer'
+          description: Таймер приостановлен
+        "404":
+          content:
+            application/json:
+              example:
+                message: Таймер с id=99 не найден
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Таймер с указанным ID не найден
+        "409":
+          content:
+            application/json:
+              example:
+                message: Таймер уже завершён
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Операция невозможна в текущем состоянии таймера
+      summary: Приостановка таймера
+      tags:
+      - timers
+  /timers/{id}/complete:
+    post:
+      description: |
+        Переводит таймер в состояние COMPLETED. После завершения таймер
+        не может быть запущен повторно. Допускается из любого состояния, кроме COMPLETED.
+      operationId: completeTimer
+      parameters:
+      - description: Уникальный идентификатор таймера
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 1
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timer'
+          description: Таймер завершён
+        "404":
+          content:
+            application/json:
+              example:
+                message: Таймер с id=99 не найден
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Таймер с указанным ID не найден
+        "409":
+          content:
+            application/json:
+              example:
+                message: Таймер уже завершён
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Операция невозможна в текущем состоянии таймера
+      summary: Завершение таймера
+      tags:
+      - timers
+components:
+  parameters:
+    TimerId:
+      description: Уникальный идентификатор таймера
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        example: 1
+        format: int64
+        type: integer
+      style: simple
+  responses:
+    TimerNotFound:
+      content:
+        application/json:
+          example:
+            message: Таймер с id=99 не найден
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Таймер с указанным ID не найден
+    InvalidStateTransition:
+      content:
+        application/json:
+          example:
+            message: Таймер уже завершён
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      description: Операция невозможна в текущем состоянии таймера
+  schemas:
+    Timer:
+      description: Таймер помидоро с отслеживанием оставшегося времени
+      example:
+        durationMinutes: 25
+        name: Работа
+        remainingSeconds: 1230
+        id: 1
+        status: RUNNING
+      properties:
+        id:
+          description: Уникальный идентификатор таймера
+          example: 1
+          format: int64
+          type: integer
+        name:
+          description: Название таймера
+          example: Работа
+          type: string
+        status:
+          description: Текущее состояние таймера
+          enum:
+          - CREATED
+          - RUNNING
+          - PAUSED
+          - COMPLETED
+          example: RUNNING
+          type: string
+        durationMinutes:
+          default: 25
+          description: Длительность таймера в минутах
+          example: 25
+          maximum: 120
+          minimum: 1
+          type: integer
+        remainingSeconds:
+          description: |
+            Оставшееся время в секундах. Вычисляется динамически с учётом
+            всех запусков и пауз. Для запущенного таймера пересчитывается
+            при каждом запросе.
+          example: 1230
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+      - id
+      - name
+      - remainingSeconds
+      - status
+      type: object
+    CreateTimerRequest:
+      description: Запрос на создание нового таймера
+      example:
+        durationMinutes: 25
+        name: Работа
+      properties:
+        name:
+          description: Название таймера
+          example: Работа
+          maxLength: 255
+          minLength: 1
+          type: string
+        durationMinutes:
+          default: 25
+          description: Длительность таймера в минутах (от 1 до 120)
+          example: 25
+          maximum: 120
+          minimum: 1
+          type: integer
+      required:
+      - name
+      type: object
+    ErrorResponse:
+      description: Ответ с описанием ошибки
+      example:
+        message: Таймер с id=99 не найден
+      properties:
+        message:
+          description: Человекочитаемое описание ошибки
+          example: Таймер с id=99 не найден
+          type: string
+      type: object
