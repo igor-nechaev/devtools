@@ -33,6 +33,7 @@ class TimerEntity(
                 val running = java.time.Duration.between(startedAt, Instant.now()).seconds
                 elapsedSeconds + running
             }
+
             else -> elapsedSeconds
         }
         return maxOf(0, totalSeconds - currentElapsed)

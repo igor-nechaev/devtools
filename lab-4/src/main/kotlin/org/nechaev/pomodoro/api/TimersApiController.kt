@@ -2,13 +2,16 @@ package org.nechaev.pomodoro.api
 
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
-import java.util.Optional
+import java.util.*
 
-@jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.12.0")
+@jakarta.annotation.Generated(
+    value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],
+    comments = "Generator version: 7.12.0"
+)
 @Controller
 @RequestMapping("\${openapi.pomodoroTimerService.base-path:}")
 class TimersApiController(
-        delegate: TimersApiDelegate?
+    delegate: TimersApiDelegate?
 ) : TimersApi {
     private lateinit var delegate: TimersApiDelegate
 

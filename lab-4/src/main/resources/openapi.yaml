@@ -9,11 +9,11 @@ info:
   title: Pomodoro Timer Service
   version: 1.0.0
 servers:
-- description: Локальный сервер разработки
-  url: http://localhost:8080
+  - description: Локальный сервер разработки
+    url: http://localhost:8080
 tags:
-- description: Операции с таймерами помидоро
-  name: timers
+  - description: Операции с таймерами помидоро
+    name: timers
 paths:
   /timers:
     get:
@@ -25,16 +25,16 @@ paths:
           content:
             application/json:
               example:
-              - id: 1
-                name: Работа
-                status: RUNNING
-                durationMinutes: 25
-                remainingSeconds: 1230
-              - id: 2
-                name: Перерыв
-                status: CREATED
-                durationMinutes: 5
-                remainingSeconds: 300
+                - id: 1
+                  name: Работа
+                  status: RUNNING
+                  durationMinutes: 25
+                  remainingSeconds: 1230
+                - id: 2
+                  name: Перерыв
+                  status: CREATED
+                  durationMinutes: 5
+                  remainingSeconds: 300
               schema:
                 items:
                   $ref: '#/components/schemas/Timer'
@@ -42,7 +42,7 @@ paths:
           description: Список таймеров
       summary: Получение списка всех таймеров
       tags:
-      - timers
+        - timers
     post:
       description: |
         Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.
@@ -87,7 +87,7 @@ paths:
           description: "Некорректный запрос (например, не указано имя)"
       summary: Создание нового таймера
       tags:
-      - timers
+        - timers
   /timers/{id}:
     get:
       description: |
@@ -95,16 +95,16 @@ paths:
         Для запущенного таймера оставшееся время пересчитывается при каждом запросе.
       operationId: getTimerById
       parameters:
-      - description: Уникальный идентификатор таймера
-        explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          example: 1
-          format: int64
-          type: integer
-        style: simple
+        - description: Уникальный идентификатор таймера
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            example: 1
+            format: int64
+            type: integer
+          style: simple
       responses:
         "200":
           content:
@@ -122,7 +122,7 @@ paths:
           description: Таймер с указанным ID не найден
       summary: Получение таймера по идентификатору
       tags:
-      - timers
+        - timers
   /timers/{id}/start:
     post:
       description: |
@@ -131,16 +131,16 @@ paths:
         отсчёт продолжается с того места, где был остановлен.
       operationId: startTimer
       parameters:
-      - description: Уникальный идентификатор таймера
-        explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          example: 1
-          format: int64
-          type: integer
-        style: simple
+        - description: Уникальный идентификатор таймера
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            example: 1
+            format: int64
+            type: integer
+          style: simple
       responses:
         "200":
           content:
@@ -166,7 +166,7 @@ paths:
           description: Операция невозможна в текущем состоянии таймера
       summary: Запуск таймера
       tags:
-      - timers
+        - timers
   /timers/{id}/stop:
     post:
       description: |
@@ -175,16 +175,16 @@ paths:
         Допускается только из состояния RUNNING.
       operationId: stopTimer
       parameters:
-      - description: Уникальный идентификатор таймера
-        explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          example: 1
-          format: int64
-          type: integer
-        style: simple
+        - description: Уникальный идентификатор таймера
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            example: 1
+            format: int64
+            type: integer
+          style: simple
       responses:
         "200":
           content:
@@ -210,7 +210,7 @@ paths:
           description: Операция невозможна в текущем состоянии таймера
       summary: Приостановка таймера
       tags:
-      - timers
+        - timers
   /timers/{id}/complete:
     post:
       description: |
@@ -218,16 +218,16 @@ paths:
         не может быть запущен повторно. Допускается из любого состояния, кроме COMPLETED.
       operationId: completeTimer
       parameters:
-      - description: Уникальный идентификатор таймера
-        explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          example: 1
-          format: int64
-          type: integer
-        style: simple
+        - description: Уникальный идентификатор таймера
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            example: 1
+            format: int64
+            type: integer
+          style: simple
       responses:
         "200":
           content:
@@ -253,7 +253,7 @@ paths:
           description: Операция невозможна в текущем состоянии таймера
       summary: Завершение таймера
       tags:
-      - timers
+        - timers
 components:
   parameters:
     TimerId:
@@ -306,10 +306,10 @@ components:
         status:
           description: Текущее состояние таймера
           enum:
-          - CREATED
-          - RUNNING
-          - PAUSED
-          - COMPLETED
+            - CREATED
+            - RUNNING
+            - PAUSED
+            - COMPLETED
           example: RUNNING
           type: string
         durationMinutes:
@@ -329,10 +329,10 @@ components:
           minimum: 0
           type: integer
       required:
-      - id
-      - name
-      - remainingSeconds
-      - status
+        - id
+        - name
+        - remainingSeconds
+        - status
       type: object
     CreateTimerRequest:
       description: Запрос на создание нового таймера
@@ -354,7 +354,7 @@ components:
           minimum: 1
           type: integer
       required:
-      - name
+        - name
       type: object
     ErrorResponse:
       description: Ответ с описанием ошибки

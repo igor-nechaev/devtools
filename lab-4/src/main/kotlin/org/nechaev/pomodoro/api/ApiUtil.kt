@@ -1,8 +1,7 @@
 package org.nechaev.pomodoro.api
 
-import org.springframework.web.context.request.NativeWebRequest
-
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.web.context.request.NativeWebRequest
 import java.io.IOException
 
 object ApiUtil {
