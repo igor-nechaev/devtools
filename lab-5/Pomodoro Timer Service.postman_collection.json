@@ -1,0 +1,809 @@
+{
+  "info": {
+    "_postman_id": "4e26dfad-6b85-441e-97c4-cb4143e873ac",
+    "name": "Pomodoro Timer Service",
+    "description": "REST API для управления таймерами по технике помидоро.\n\nСервис позволяет создавать таймеры с настраиваемой длительностью,\nзапускать и приостанавливать их, а также отслеживать оставшееся время\nв реальном времени с учётом всех пауз.\n\n### Жизненный цикл таймера\n\n```\nCREATED ──start──▶ RUNNING ──stop──▶ PAUSED\n                     │  ▲              │\n                     │  └───start──────┘\n                     │\n                  complete\n                     │\n                     ▼\n                 COMPLETED\n```\n\n### Допустимые переходы состояний\n\n| Текущий статус | Доступные действия       |\n|----------------|--------------------------|\n| CREATED        | start                    |\n| RUNNING        | stop, complete           |\n| PAUSED         | start, complete          |\n| COMPLETED      | —                        |\n\n\nContact Support:\n Name: Нечаев Игорь Сергеевич",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "16244767",
+    "_collection_link": "https://go.postman.co/collection/16244767-4e26dfad-6b85-441e-97c4-cb4143e873ac?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "timers",
+      "item": [
+        {
+          "name": "{id}",
+          "item": [
+            {
+              "name": "start",
+              "item": [
+                {
+                  "name": "Запуск таймера",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/timers/:id/start",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "timers",
+                        ":id",
+                        "start"
+                      ],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "1",
+                          "description": "Уникальный идентификатор таймера"
+                        }
+                      ]
+                    },
+                    "description": "Переводит таймер в состояние RUNNING и начинает отсчёт времени.\nДопускается из состояний CREATED и PAUSED. При возобновлении после паузы\nотсчёт продолжается с того места, где был остановлен.\n"
+                  },
+                  "response": [
+                    {
+                      "name": "Таймер запущен",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/start",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "start"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"durationMinutes\": 25,\n  \"name\": \"Работа\",\n  \"remainingSeconds\": 1230,\n  \"id\": 1,\n  \"status\": \"RUNNING\"\n}"
+                    },
+                    {
+                      "name": "Таймер с указанным ID не найден",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/start",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "start"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Not Found",
+                      "code": 404,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер с id=99 не найден\"\n}"
+                    },
+                    {
+                      "name": "Операция невозможна в текущем состоянии таймера",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/start",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "start"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Conflict",
+                      "code": 409,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер уже завершён\"\n}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "stop",
+              "item": [
+                {
+                  "name": "Приостановка таймера",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/timers/:id/stop",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "timers",
+                        ":id",
+                        "stop"
+                      ],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "1",
+                          "description": "Уникальный идентификатор таймера"
+                        }
+                      ]
+                    },
+                    "description": "Переводит таймер в состояние PAUSED. Накопленное время текущей сессии\nсохраняется, и при следующем запуске отсчёт продолжится с того же значения.\nДопускается только из состояния RUNNING.\n"
+                  },
+                  "response": [
+                    {
+                      "name": "Таймер приостановлен",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/stop",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "stop"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"durationMinutes\": 25,\n  \"name\": \"Работа\",\n  \"remainingSeconds\": 1230,\n  \"id\": 1,\n  \"status\": \"RUNNING\"\n}"
+                    },
+                    {
+                      "name": "Таймер с указанным ID не найден",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/stop",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "stop"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Not Found",
+                      "code": 404,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер с id=99 не найден\"\n}"
+                    },
+                    {
+                      "name": "Операция невозможна в текущем состоянии таймера",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/stop",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "stop"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Conflict",
+                      "code": 409,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер уже завершён\"\n}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "complete",
+              "item": [
+                {
+                  "name": "Завершение таймера",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/timers/:id/complete",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "timers",
+                        ":id",
+                        "complete"
+                      ],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "1",
+                          "description": "Уникальный идентификатор таймера"
+                        }
+                      ]
+                    },
+                    "description": "Переводит таймер в состояние COMPLETED. После завершения таймер\nне может быть запущен повторно. Допускается из любого состояния, кроме COMPLETED.\n"
+                  },
+                  "response": [
+                    {
+                      "name": "Таймер завершён",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/complete",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "complete"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "OK",
+                      "code": 200,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"durationMinutes\": 25,\n  \"name\": \"Работа\",\n  \"remainingSeconds\": 1230,\n  \"id\": 1,\n  \"status\": \"RUNNING\"\n}"
+                    },
+                    {
+                      "name": "Таймер с указанным ID не найден",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/complete",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "complete"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Not Found",
+                      "code": 404,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер с id=99 не найден\"\n}"
+                    },
+                    {
+                      "name": "Операция невозможна в текущем состоянии таймера",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Accept",
+                            "value": "application/json"
+                          }
+                        ],
+                        "url": {
+                          "raw": "{{baseUrl}}/timers/:id/complete",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "timers",
+                            ":id",
+                            "complete"
+                          ],
+                          "variable": [
+                            {
+                              "key": "id",
+                              "value": "1",
+                              "description": "Уникальный идентификатор таймера"
+                            }
+                          ]
+                        }
+                      },
+                      "status": "Conflict",
+                      "code": 409,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n  \"message\": \"Таймер уже завершён\"\n}"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Получение таймера по идентификатору",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/timers/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "timers",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Уникальный идентификатор таймера"
+                    }
+                  ]
+                },
+                "description": "Возвращает таймер с актуальным значением `remainingSeconds`.\nДля запущенного таймера оставшееся время пересчитывается при каждом запросе.\n"
+              },
+              "response": [
+                {
+                  "name": "Таймер найден",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/timers/:id",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "timers",
+                        ":id"
+                      ],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "1",
+                          "description": "Уникальный идентификатор таймера"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"durationMinutes\": 25,\n  \"name\": \"Работа\",\n  \"remainingSeconds\": 1230,\n  \"id\": 1,\n  \"status\": \"RUNNING\"\n}"
+                },
+                {
+                  "name": "Таймер с указанным ID не найден",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/timers/:id",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "timers",
+                        ":id"
+                      ],
+                      "variable": [
+                        {
+                          "key": "id",
+                          "value": "1",
+                          "description": "Уникальный идентификатор таймера"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n  \"message\": \"Таймер с id=99 не найден\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Получение списка всех таймеров",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/timers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "timers"
+              ]
+            },
+            "description": "Возвращает все созданные таймеры с актуальным значением оставшегося времени."
+          },
+          "response": [
+            {
+              "name": "Список таймеров",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/timers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "timers"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Работа\",\n    \"status\": \"RUNNING\",\n    \"durationMinutes\": 25,\n    \"remainingSeconds\": 1230\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Перерыв\",\n    \"status\": \"CREATED\",\n    \"durationMinutes\": 5,\n    \"remainingSeconds\": 300\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Создание нового таймера",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"durationMinutes\": 25,\n  \"name\": \"Работа\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "timers"
+              ]
+            },
+            "description": "Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.\nТаймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.\n"
+          },
+          "response": [
+            {
+              "name": "Таймер успешно создан",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Работа\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/timers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "timers"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Работа\",\n  \"status\": \"CREATED\",\n  \"durationMinutes\": 25,\n  \"remainingSeconds\": 1500\n}"
+            },
+            {
+              "name": "Некорректный запрос (например, не указано имя)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Работа\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/timers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "timers"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Поле 'name' обязательно для заполнения\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ]
+}
