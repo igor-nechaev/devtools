@@ -4,7 +4,7 @@ WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn/ .mvn/
 COPY src/ src/
-RUN ./mvnw package -DskipTests -q
+RUN chmod +x mvnw && ./mvnw package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
