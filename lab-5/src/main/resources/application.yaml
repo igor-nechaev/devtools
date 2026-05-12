@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pomodoro
+    name: pomodoro-service
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pomodoro}
@@ -31,3 +31,15 @@ management:
     export:
       prometheus:
         enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+    metrics:
+      export:
+        enabled: false
+  observations:
+    annotations:
+      enabled: true

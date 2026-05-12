@@ -1,21 +1,20 @@
 package org.nechaev.pomodoro.api
 
 import org.nechaev.pomodoro.model.CreateTimerRequest
+import org.nechaev.pomodoro.model.ErrorResponse
 import org.nechaev.pomodoro.model.Timer
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import java.util.*
+
+import java.util.Optional
 
 /**
  * A delegate to be called by the {@link TimersApiController}}.
  * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
  */
-@jakarta.annotation.Generated(
-    value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],
-    comments = "Generator version: 7.12.0"
-)
+@jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.12.0")
 interface TimersApiDelegate {
 
     fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
@@ -27,27 +26,15 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
             }
@@ -64,19 +51,11 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
             }
@@ -93,11 +72,7 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "[ {  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}, {  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"} ]"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "[ {  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}, {  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"} ]")
                     break
                 }
             }
@@ -114,19 +89,11 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
             }
@@ -143,27 +110,15 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
             }
@@ -180,27 +135,15 @@ interface TimersApiDelegate {
         getRequest().ifPresent { request ->
             for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"durationMinutes\" : 25,  \"name\" : \"Работа\",  \"remainingSeconds\" : 1230,  \"id\" : 1,  \"status\" : \"RUNNING\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    ApiUtil.setExampleResponse(
-                        request,
-                        "application/json",
-                        "{  \"message\" : \"Таймер с id=99 не найден\"}"
-                    )
+                    ApiUtil.setExampleResponse(request, "application/json", "{  \"message\" : \"Таймер с id=99 не найден\"}")
                     break
                 }
             }

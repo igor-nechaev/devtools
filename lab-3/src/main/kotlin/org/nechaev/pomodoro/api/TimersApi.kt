@@ -67,7 +67,7 @@ interface TimersApi {
         tags = ["timers",],
         summary = "Создание нового таймера",
         operationId = "createTimer",
-        description = """Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.
+        description = """Создаёт таймер в состоянии CREATED. По умолчанию длительность - 25 минут.
 Таймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.
 """,
         responses = [

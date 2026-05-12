@@ -238,7 +238,7 @@
     },
     {
       "title": "Завершения: ручные vs автоматические",
-      "description": "rate(pomodoro_op_complete_total{reason=...}[5m])\nЕсли автозавершений больше — пользователи не нажимают complete",
+      "description": "rate(pomodoro_op_complete_total{reason=...}[5m])\nЕсли автозавершений больше - пользователи не нажимают complete",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
@@ -259,7 +259,7 @@
     },
     {
       "title": "Ошибки по типу (increase за 5 мин)",
-      "description": "not_found — обращение к несуществующему таймеру\nconflict — недопустимый переход состояния",
+      "description": "not_found - обращение к несуществующему таймеру\nconflict - недопустимый переход состояния",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
@@ -280,7 +280,7 @@
     },
     {
       "title": "Распределение длительности таймеров",
-      "description": "histogram_quantile по гистограмме длительности.\nМедиана и p95 — какие таймеры создают чаще",
+      "description": "histogram_quantile по гистограмме длительности.\nМедиана и p95 - какие таймеры создают чаще",
       "type": "timeseries",
       "gridPos": {
         "h": 8,

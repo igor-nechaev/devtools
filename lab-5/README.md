@@ -1,265 +1,192 @@
-# Лабораторная работа 4 — Журналирование (Loki + Promtail + Grafana)
+# Лабораторная работа 5 - Распределённая трассировка (OpenTelemetry + Tempo + Grafana)
 
-Расширение сервиса Pomodoro Timer из лабораторных работ 2 и 3: к стеку метрик (Prometheus + Grafana) добавлен
-централизованный
-сбор логов через **Promtail → Loki → Grafana**. Приложение пишет в stdout структурированные сообщения трёх уровней
-(`INFO` / `WARN` / `ERROR`), Promtail подхватывает их из docker-логов, Loki хранит и индексирует по меткам, Grafana
-визуализирует через LogQL.
+Расширение сервиса Pomodoro Timer из лаб 2-4: к стеку метрик (Prometheus + Grafana) и логов (Loki + Alloy) добавлена
+**распределённая трассировка** на базе **OpenTelemetry → OTLP → Grafana Tempo → Grafana (TraceQL)**.
 
-Подробности по схеме доставки, формату сообщений и LogQL-запросам — в [LOGS.md](LOGS.md).
+Также по фидбеку преподавателя сборщик логов `Promtail` заменён на его наследника **Grafana Alloy** (новый агент
+Grafana Labs на синтаксисе River, единый для логов / метрик / трейсов).
 
-## Стек метрик (lab-3)
-
-Метрики Pomodoro Timer из lab-3 остались без изменений и продолжают работать — Prometheus собирает их с
-`/actuator/prometheus`, Grafana визуализирует на дашборде `Pomodoro Timer Service`.
+Подробности про архитектуру трассировки, генерируемые spanы и язык запросов TraceQL - в [TRACES.md](TRACES.md).
+Логи (LogQL, дашборды) - в [LOGS.md](LOGS.md).
 
 **Автор:** Нечаев Игорь Сергеевич, 334772
 
-## Продуктовые метрики
+## Что нового по сравнению с lab-4
 
-Помимо стандартных метрик фреймворка (HTTP latency, JVM, connection pool), сервис экспортирует собственные метрики,
-отражающие бизнес-логику приложения:
-
-| Метрика в Prometheus                           | Тип       | Что показывает                                  |
-|------------------------------------------------|-----------|-------------------------------------------------|
-| `pomodoro_op_create_total`                     | Counter   | Сколько таймеров создано                        |
-| `pomodoro_op_start_total`                      | Counter   | Сколько раз запускали таймеры                   |
-| `pomodoro_op_stop_total`                       | Counter   | Сколько раз ставили на паузу                    |
-| `pomodoro_op_complete_total{reason="manual"}`  | Counter   | Завершены вручную (нажали complete)             |
-| `pomodoro_op_complete_total{reason="expired"}` | Counter   | Завершены автоматически (время вышло)           |
-| `pomodoro_op_error_total{type="not_found"}`    | Counter   | Обращение к несуществующему таймеру             |
-| `pomodoro_op_error_total{type="conflict"}`     | Counter   | Попытка недопустимого перехода состояния        |
-| `pomodoro_gauge_running`                       | Gauge     | Сколько таймеров сейчас запущено (RUNNING)      |
-| `pomodoro_gauge_pending`                       | Gauge     | Сколько таймеров ожидают запуска (CREATED)      |
-| `pomodoro_gauge_all`                           | Gauge     | Общее число таймеров в системе                  |
-| `pomodoro_gauge_completion_rate`               | Gauge     | Доля завершённых от общего числа (0.0–1.0)      |
-| `pomodoro_timer_duration_minutes`              | Histogram | Распределение длительности создаваемых таймеров |
-
-### Где регистрируются
-
-Все метрики регистрируются через `MeterRegistry` в `TimersApiDelegateImpl.kt`. Counters инкрементируются при каждой
-операции, Gauges вычисляются из БД при каждом scrape.
-
-## PromQL-запросы
-
-### Продуктовые запросы на дашборде
-
-| Панель                     | PromQL-запрос                                                                   | Зачем нужен                                                           |
-|----------------------------|---------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| Доля завершённых (%)       | `pomodoro_gauge_completion_rate * 100`                                          | Ключевая метрика продуктивности — сколько % таймеров доводят до конца |
-| Активные таймеры           | `pomodoro_gauge_running`                                                        | Текущая нагрузка — сколько пользователей работают прямо сейчас        |
-| Скорость операций          | `rate(pomodoro_op_create_total[5m])`                                            | Динамика активности пользователей во времени                          |
-| Ручные vs авто             | `rate(pomodoro_op_complete_total{reason="manual"}[5m])` vs `{reason="expired"}` | Если автозавершений больше — пользователи забрасывают таймеры         |
-| Ошибки                     | `increase(pomodoro_op_error_total[5m])`                                         | Абсолютное число ошибок за 5 мин, разбивка по типу (404/409)          |
-| Распределение длительности | `histogram_quantile(0.5, rate(pomodoro_timer_duration_minutes_bucket[5m]))`     | Медиана длительности — короткие перерывы или полные помидоро?         |
-
-### Запросы в Grafana Explore
-
-Ниже — примеры PromQL-запросов, выполненных в Grafana Explore (меню → Explore → Prometheus).
-
-**Сколько таймеров создано за последний час:**
-
-```promql
-increase(pomodoro_op_create_total[1h])
-```
-
-![Сколько таймеров создано за последний час](%D0%A1%D0%BA%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE%20%D1%82%D0%B0%D0%B9%D0%BC%D0%B5%D1%80%D0%BE%D0%B2%20%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%BE%20%D0%B7%D0%B0%20%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9%20%D1%87%D0%B0%D1%81.png)
-
-**Отношение пауз к запускам** — показывает, как часто пользователи прерывают работу (1.0 = каждый запуск заканчивается
-паузой):
-
-```promql
-rate(pomodoro_op_stop_total[5m]) / rate(pomodoro_op_start_total[5m])
-```
-
-![Отношение пауз к запускам](%D0%9E%D1%82%D0%BD%D0%BE%D1%88%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%BF%D0%B0%D1%83%D0%B7%20%D0%BA%20%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D0%BC%20%28%D0%BF%D0%BE%D0%BA%D0%B0%D0%B7%D1%8B%D0%B2%D0%B0%D0%B5%D1%82%2C%20%D0%BA%D0%B0%D0%BA%20%D1%87%D0%B0%D1%81%D1%82%D0%BE%20%D0%BF%D1%80%D0%B5%D1%80%D1%8B%D0%B2%D0%B0%D1%8E%D1%82%20%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%83%29.png)
-
-**Процент автозавершений от всех завершений** — если значение высокое, пользователи не нажимают complete, а просто ждут
-истечения:
-
-```promql
-increase(pomodoro_op_complete_total{reason="expired"}[1h])
-  / ignoring(reason) sum without(reason)(increase(pomodoro_op_complete_total[1h])) * 100
-```
-
-![Процент автозавершений](%D0%9F%D1%80%D0%BE%D1%86%D0%B5%D0%BD%D1%82%20%D0%B0%D0%B2%D1%82%D0%BE%D0%B7%D0%B0%D0%B2%D0%B5%D1%80%D1%88%D0%B5%D0%BD%D0%B8%D0%B9%20%D0%BE%D1%82%20%D0%B2%D1%81%D0%B5%D1%85%20%D0%B7%D0%B0%D0%B2%D0%B5%D1%80%D1%88%D0%B5%D0%BD%D0%B8%D0%B9.png)
-
-**Среднее время ответа API на эндпоинтах таймеров (мс)** — отношение суммарного времени к числу запросов:
-
-```promql
-rate(http_server_requests_seconds_sum{uri=~"/timers.*"}[5m])
-  / rate(http_server_requests_seconds_count{uri=~"/timers.*"}[5m]) * 1000
-```
-
-![Среднее время ответа API](%D0%A1%D1%80%D0%B5%D0%B4%D0%BD%D0%B5%D0%B5%20%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%20%D0%BE%D1%82%D0%B2%D0%B5%D1%82%D0%B0%20API%20%D0%BD%D0%B0%20%D1%8D%D0%BD%D0%B4%D0%BF%D0%BE%D0%B8%D0%BD%D1%82%D0%B0%D1%85%20%D1%82%D0%B0%D0%B9%D0%BC%D0%B5%D1%80%D0%BE%D0%B2%20%28%D0%BC%D1%81%29.png)
-
-**Количество ошибок в процентах от всех запросов** — показывает error rate сервиса:
-
-```promql
-sum(rate(pomodoro_op_error_total[5m]))
-  / sum(rate(http_server_requests_seconds_count{uri=~"/timers.*"}[5m])) * 100
-```
-
-![Количество ошибок в процентах](%D0%9A%D0%BE%D0%BB%D0%B8%D1%87%D0%B5%D1%81%D1%82%D0%B2%D0%BE%20%D0%BE%D1%88%D0%B8%D0%B1%D0%BE%D0%BA%20%D0%B2%20%D0%BF%D1%80%D0%BE%D1%86%D0%B5%D0%BD%D1%82%D0%B0%D1%85%20%D0%BE%D1%82%20%D0%B2%D1%81%D0%B5%D1%85%20%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%BE%D0%B2.png)
-
-## Grafana-дашборд
-
-Дашборд `Pomodoro Timer Service` подгружается автоматически при старте Grafana (provisioning) и содержит 10 панелей:
-
-**Верхний ряд (состояние системы):**
-
-- Всего таймеров — общее число в БД
-- Созданные — counter с момента старта
-- Завершённые — сумма ручных и автоматических
-- Активные — gauge, текущие RUNNING
-- Ожидают запуска — gauge, CREATED
-- Доля завершённых (%) — ключевая продуктовая метрика
-
-**Графики (динамика):**
-
-- Скорость операций (rate/sec) — создание, запуск, пауза, завершение
-- Ручные vs автоматические завершения — помогает понять поведение пользователей
-- Ошибки по типу — not_found (404) и conflict (409)
-- Распределение длительности — медиана и p95 по гистограмме
-
-Скриншоты дашборда — см. раздел [Скриншоты](#скриншоты).
-
-## Инфраструктура
-
-```
-docker-compose.yml
-├── postgres:17           :5432   БД приложения
-├── pomodoro-app          :8080   Spring Boot сервис (билдится из ./Dockerfile)
-├── prom/prometheus       :9090   Сбор метрик (scrape каждые 5 сек)
-├── grafana/grafana       :3000   Дашборды (admin/admin)
-├── grafana/loki          :3100   Хранилище логов
-└── grafana/promtail              Сбор логов из docker-сокета → Loki
-
-prometheus.yml                    Конфигурация scrape метрик
-loki-config.yml                   Single-instance Loki (filesystem storage)
-promtail-config.yml               docker_sd_configs → Loki push
-grafana/provisioning/
-├── datasources/prometheus.yml    Автоматическое подключение Prometheus и Loki
-└── dashboards/
-    ├── dashboards.yml            Провайдер дашбордов
-    └── pomodoro.json             Дашборд с метриками
-```
+| Компонент                | lab-4                       | lab-5                                                       |
+|--------------------------|-----------------------------|-------------------------------------------------------------|
+| Сборщик логов            | `grafana/promtail:3.1.0`    | `grafana/alloy:v1.3.1` (River-конфиг)                       |
+| Tracing backend          | -                           | `grafana/tempo:2.5.0` (OTLP/HTTP, локальное хранилище)      |
+| Tracing SDK              | -                           | `micrometer-tracing-bridge-otel` + `opentelemetry-exporter` |
+| Grafana datasources      | Prometheus, Loki            | Prometheus, Loki, **Tempo** + traces↔logs корреляция        |
+| Бизнес-spanы             | -                           | вручную, через `Observation` API в `TimersApiDelegateImpl`  |
 
 ## Стек технологий
 
-- Kotlin 2.1.10 + Spring Boot 3.5
+- Kotlin 2.1.10 + Spring Boot 3.5.13
 - Spring Boot Actuator + Micrometer
-- micrometer-registry-prometheus
-- Prometheus (TSDB, PromQL)
-- **Loki 3.1** (хранилище логов, LogQL)
-- **Promtail 3.1** (сбор docker-логов через `docker_sd_configs`)
-- Grafana (визуализация, provisioning)
-- SLF4J + Logback (структурированное логирование в stdout)
+- **Micrometer Tracing → OpenTelemetry SDK → OTLP/HTTP**
+- **Grafana Tempo 2.5** (TSDB трейсов, TraceQL)
+- Grafana Loki 3.1 (логи, LogQL)
+- **Grafana Alloy 1.3** (наследник Promtail; сбор docker-логов)
+- Prometheus (метрики, PromQL)
+- Grafana 11 (визуализация, provisioning)
 - Spring Data JPA + PostgreSQL
 - OpenAPI Generator (kotlin-spring)
-- Docker Compose
-- Maven
+- Docker Compose, Maven
+
+## Архитектура
+
+```
+┌──────────────────────────┐
+│      pomodoro-app        │
+│  (Spring Boot + OTel)    │
+│                          │
+│  /actuator/prometheus ───┼──▶ Prometheus ──┐
+│                          │                 │
+│  stdout (logs) ──────────┼──▶ Alloy ──▶ Loki ──┤
+│                          │                 │
+│  OTLP/HTTP :4318 ────────┼──▶ Tempo ───────┤
+│                          │                 │
+└──────────────────────────┘                 ▼
+                                         Grafana
+                                  (PromQL / LogQL / TraceQL)
+```
+
+## Распределённая трассировка
+
+Каждый HTTP-запрос порождает **многоуровневое дерево spanов** благодаря тому, что в делегате бизнес-операции
+обёрнуты в именованные `Observation`. Пример для `POST /timers`:
+
+```
+http post /timers                          ← root span (Spring MVC)
+└─ pomodoro.create-timer                   ← бизнес-операция
+   ├─ pomodoro.entity.build
+   ├─ pomodoro.repository.save
+   │  └─ connection                        ← Hikari acquire (auto, datasource-micrometer)
+   │     ├─ query  (INSERT INTO timers …)  ← JDBC span (auto)
+   │     └─ generated-keys                 ← JDBC span (auto)
+   └─ pomodoro.metrics.record
+```
+
+8 spanов на один HTTP-запрос, дерево глубиной 4. Это и есть «трейс с ≥ 2 spanами», требуемый по заданию -
+с большим запасом.
+
+Полный список бизнес-spanов:
+
+| Эндпоинт                   | Дочерние spanы                                                          |
+|----------------------------|-------------------------------------------------------------------------|
+| `GET    /timers`           | `pomodoro.list-timers` → `…repository.find-all`, `…toDto.batch`         |
+| `POST   /timers`           | `pomodoro.create-timer` → `entity.build`, `repository.save`, `metrics.record` |
+| `GET    /timers/{id}`      | `pomodoro.get-timer` → `repository.find-by-id`                          |
+| `POST   /timers/{id}/start`| `pomodoro.start-timer` → `state.validate`, `state.transition.running`   |
+| `POST   /timers/{id}/stop` | `pomodoro.stop-timer`  → `state.validate`, `state.transition.paused`    |
+| `POST   /timers/{id}/complete` | `pomodoro.complete-timer` → `state.validate`, `state.transition.completed` |
+
+К некоторым спанам приклеены атрибуты (`timer.id`, `timer.duration_minutes`, `timer.current_status`,
+`timer.elapsed_seconds`) - по ним можно фильтровать в TraceQL.
 
 ## Запуск
 
 ### Требования
 
 - Java 17+
-- Maven (или встроенный `./mvnw`)
 - Docker
+- Maven (или встроенный `./mvnw`)
 
-### 1. Собрать приложение и поднять весь стек
+### 1. Сборка и запуск стека
 
 ```bash
-cd lab-4
+cd lab-5
 ./mvnw clean package
 docker compose up -d --build
 ```
 
-Запустятся PostgreSQL, само приложение, Prometheus, Grafana, Loki и Promtail.
+Поднимутся: PostgreSQL, само приложение, Prometheus, Grafana, Loki, Alloy, Tempo.
 
-### 2. Проверить
+### 2. Что доступно
 
-| Что           | URL                                         |
-|---------------|---------------------------------------------|
-| Приложение    | http://localhost:8080                       |
-| Swagger UI    | http://localhost:8080/swagger-ui/index.html |
-| Метрики (raw) | http://localhost:8080/actuator/prometheus   |
-| Prometheus    | http://localhost:9090                       |
-| Loki API      | http://localhost:3100                       |
-| Grafana       | http://localhost:3000 (admin/admin)         |
+| Что                | URL                                                  |
+|--------------------|------------------------------------------------------|
+| Приложение         | http://localhost:8080                                |
+| Swagger UI         | http://localhost:8080/swagger-ui/index.html          |
+| Метрики (raw)      | http://localhost:8080/actuator/prometheus            |
+| Prometheus         | http://localhost:9090                                |
+| Loki API           | http://localhost:3100                                |
+| Tempo HTTP API     | http://localhost:3200                                |
+| Tempo OTLP/HTTP    | http://localhost:4318/v1/traces                      |
+| Alloy UI           | http://localhost:12345                               |
+| Grafana            | http://localhost:3000 (admin/admin)                  |
 
-### 3. Посмотреть дашборды
+### 3. Сгенерировать трейсы
 
-- **Метрики:** Grafana → Dashboards → `Pomodoro Timer Service` (загружен автоматически).
-- **Логи:** Grafana → Explore → Loki, либо собранный вручную дашборд по LogQL-запросам из [LOGS.md](LOGS.md).
+```bash
+TIMER_ID=$(curl -s -X POST http://localhost:8080/timers \
+    -H 'Content-Type: application/json' \
+    -d '{"name":"deep work","durationMinutes":25}' | jq .id)
 
-Создайте несколько таймеров и поработайте с ними (см. примеры curl в [LOGS.md](LOGS.md)), чтобы графики и ленты логов
-заполнились данными.
+curl -X POST http://localhost:8080/timers/$TIMER_ID/start
+curl -X POST http://localhost:8080/timers/$TIMER_ID/stop
+curl -X POST http://localhost:8080/timers/$TIMER_ID/complete
 
-## Скриншоты
+# трейсы с ошибками (status=error в TraceQL):
+curl http://localhost:8080/timers/999999
+curl -X POST http://localhost:8080/timers/$TIMER_ID/complete   # 409
+```
 
-### Продуктовые метрики
+### 4. Открыть трейсы в Grafana
 
-Дашборд с кастомными метриками бизнес-логики сервиса. Здесь отображаются данные, которые не предоставляет фреймворк из
-коробки — они регистрируются вручную через `MeterRegistry` в `TimersApiDelegateImpl.kt`:
+Grafana → **Explore** → datasource **Tempo** → **TraceQL** →
 
-- **Всего таймеров / Созданные / Завершённые** — абсолютные счётчики, позволяют оценить общий объём использования
-  сервиса
-- **Активные (RUNNING)** — gauge, показывает текущую нагрузку в реальном времени
-- **Ожидают запуска (CREATED)** — если число растёт, пользователи создают таймеры, но не запускают
-- **Доля завершённых (%)** — ключевая продуктовая метрика: какой процент таймеров доводят до конца
-- **Скорость операций** — `rate()` по каждому типу операции, видны всплески активности
-- **Ручные vs автоматические завершения** — если автозавершений больше, пользователи забрасывают таймеры не дожидаясь
-  окончания
-- **Ошибки по типу** — 404 (not_found) и 409 (conflict), помогает отловить некорректное использование API
-- **Распределение длительности** — медиана и p95, показывает какие таймеры создают чаще (5 мин перерывы или 25 мин
-  помидоро)
+```traceql
+{ resource.service.name = "pomodoro-service" }
+```
 
-![Продуктовые метрики](grafana-prod-metrics.png)
+Кликнуть на любую строку результата - раскроется дерево spanов с временной шкалой.
 
-### Технические метрики фреймворка
+Полный список TraceQL-запросов (фильтрация по эндпоинту, по атрибуту, по ошибкам, по длительности и т. д.) - в
+[TRACES.md](TRACES.md).
 
-Стандартные метрики, которые Spring Boot Actuator экспортирует автоматически. Они не требуют ручной регистрации и дают
-общую картину здоровья сервиса:
+## Что осталось от прошлых лаб
 
-- **HTTP-запросы** (`http_server_requests_seconds`) — latency, throughput, коды ответов по эндпоинтам
-- **JVM** — использование heap/non-heap памяти, GC паузы, количество потоков
-- **Hikari Connection Pool** — активные/ожидающие соединения к PostgreSQL
-- **System** — CPU usage, загрузка системы
+- **Метрики (lab-3):** `/actuator/prometheus`, дашборд `Pomodoro Timer Service` - без изменений. Подробнее в разделе
+  ниже.
+- **Логи (lab-4):** структурированные `INFO BUSINESS` / `WARN reason=…` / `ERROR`, Loki, LogQL. Поменялся только
+  агент: `Promtail → Alloy`. Все LogQL-запросы и дашборд логов работают как раньше - см. [LOGS.md](LOGS.md).
 
-![Технические метрики](grafana-core-service-metrics.png)
+## Продуктовые метрики (из lab-3, без изменений)
 
-### Логи (Loki + Grafana)
+| Метрика в Prometheus                           | Тип       | Что показывает                                  |
+|------------------------------------------------|-----------|-------------------------------------------------|
+| `pomodoro_op_create_total`                     | Counter   | Сколько таймеров создано                        |
+| `pomodoro_op_start_total`                      | Counter   | Сколько раз запускали таймеры                   |
+| `pomodoro_op_stop_total`                       | Counter   | Сколько раз ставили на паузу                    |
+| `pomodoro_op_complete_total{reason="manual"}`  | Counter   | Завершены вручную                               |
+| `pomodoro_op_complete_total{reason="expired"}` | Counter   | Завершены автоматически                         |
+| `pomodoro_op_error_total{type="not_found"}`    | Counter   | Обращение к несуществующему таймеру             |
+| `pomodoro_op_error_total{type="conflict"}`     | Counter   | Попытка недопустимого перехода состояния        |
+| `pomodoro_gauge_running`                       | Gauge     | Сколько таймеров сейчас запущено                |
+| `pomodoro_gauge_pending`                       | Gauge     | Сколько таймеров ожидают запуска                |
+| `pomodoro_gauge_all`                           | Gauge     | Общее число таймеров в системе                  |
+| `pomodoro_gauge_completion_rate`               | Gauge     | Доля завершённых от общего числа (0.0-1.0)      |
+| `pomodoro_timer_duration_minutes`              | Histogram | Распределение длительности создаваемых таймеров |
 
-Дашборд по логам из Loki, собранный по LogQL-запросам из [LOGS.md](LOGS.md). Показывает три уровня сообщений
-(`INFO BUSINESS` / `WARN reason=…` / `ERROR reason=unhandled_exception`) и их динамику во времени.
+## Файлы инфраструктуры
 
-![Дашборд логов](logs-dashboard.jpg)
+```
+docker-compose.yml                 PG + app + Prometheus + Grafana + Loki + Alloy + Tempo
+prometheus.yml                     scrape /actuator/prometheus
+loki-config.yml                    single-instance Loki (filesystem)
+alloy-config.alloy                 docker discovery → Loki  (заменил promtail-config.yml)
+tempo-config.yml                   Tempo: OTLP/HTTP + local storage
+grafana/provisioning/
+├── datasources/prometheus.yml     Prometheus + Loki + Tempo (с traces logs корреляцией)
+└── dashboards/
+    ├── dashboards.yml             провайдер
+    └── pomodoro.json              дашборд метрик
+```
 
-**Лента бизнес-событий** — все INFO-сообщения с маркером `BUSINESS` (создание, запуск, пауза, завершение,
-авто-завершение таймеров):
+## Связанные документы
 
-![Лента бизнес-событий](logs-business-actions-feed.jpg)
-
-**Распределение бизнес-операций по типам** — `count_over_time` с регуляркой по `action=`. Видно соотношение
-create / start / stop / complete / auto_complete:
-
-![Типы бизнес-операций](logs-business-actions-types.jpg)
-
-**Распределение причин WARN** — top-N по `reason` (`not_found`, `invalid_state`, `already_completed`, `validation_failed`):
-
-![Причины WARN](logs-warn-causes.jpg)
-
-**Лента WARN-сообщений** — тексты предупреждений с подробностями:
-
-![Лента WARN](logs-warn-feed.jpg)
-
-**Счётчик ERROR** — `count_over_time` по уровню ERROR за окно. Должен быть нулевым при штатной работе; ненулевое
-значение требует разбора:
-
-![Счётчик ERROR](logs-error-counter.jpg)
-
-**Лента ERROR** — необработанные исключения со стек-трейсами:
-
-![Лента ERROR](logs-error-feed.jpg)
+- [TRACES.md](TRACES.md) - теория трассировки, описание spanов, TraceQL-запросы
+- [LOGS.md](LOGS.md) - логи (LogQL, формат сообщений, дашборд)

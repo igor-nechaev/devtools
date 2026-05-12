@@ -1,11 +1,11 @@
 package org.nechaev.pomodoro.api
 
-import jakarta.servlet.http.HttpServletResponse
-import jakarta.validation.ConstraintViolationException
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.ConstraintViolationException
 
 // TODO Extend ApiException for custom exception handling, e.g. the below NotFound exception
 sealed class ApiException(msg: String, val code: Int) : Exception(msg)

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "4e26dfad-6b85-441e-97c4-cb4143e873ac",
     "name": "Pomodoro Timer Service",
-    "description": "REST API для управления таймерами по технике помидоро.\n\nСервис позволяет создавать таймеры с настраиваемой длительностью,\nзапускать и приостанавливать их, а также отслеживать оставшееся время\nв реальном времени с учётом всех пауз.\n\n### Жизненный цикл таймера\n\n```\nCREATED ──start──▶ RUNNING ──stop──▶ PAUSED\n                     │  ▲              │\n                     │  └───start──────┘\n                     │\n                  complete\n                     │\n                     ▼\n                 COMPLETED\n```\n\n### Допустимые переходы состояний\n\n| Текущий статус | Доступные действия       |\n|----------------|--------------------------|\n| CREATED        | start                    |\n| RUNNING        | stop, complete           |\n| PAUSED         | start, complete          |\n| COMPLETED      | —                        |\n\n\nContact Support:\n Name: Нечаев Игорь Сергеевич",
+    "description": "REST API для управления таймерами по технике помидоро.\n\nСервис позволяет создавать таймеры с настраиваемой длительностью,\nзапускать и приостанавливать их, а также отслеживать оставшееся время\nв реальном времени с учётом всех пауз.\n\n### Жизненный цикл таймера\n\n```\nCREATED ──start──▶ RUNNING ──stop──▶ PAUSED\n                     │  ▲              │\n                     │  └───start──────┘\n                     │\n                  complete\n                     │\n                     ▼\n                 COMPLETED\n```\n\n### Допустимые переходы состояний\n\n| Текущий статус | Доступные действия       |\n|----------------|--------------------------|\n| CREATED        | start                    |\n| RUNNING        | stop, complete           |\n| PAUSED         | start, complete          |\n| COMPLETED      | -                        |\n\n\nContact Support:\n Name: Нечаев Игорь Сергеевич",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "16244767",
     "_collection_link": "https://go.postman.co/collection/16244767-4e26dfad-6b85-441e-97c4-cb4143e873ac?source=collection_link"
@@ -700,7 +700,7 @@
                 "timers"
               ]
             },
-            "description": "Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.\nТаймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.\n"
+            "description": "Создаёт таймер в состоянии CREATED. По умолчанию длительность - 25 минут.\nТаймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.\n"
           },
           "response": [
             {

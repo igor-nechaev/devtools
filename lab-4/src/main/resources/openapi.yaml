@@ -45,7 +45,7 @@ paths:
         - timers
     post:
       description: |
-        Создаёт таймер в состоянии CREATED. По умолчанию длительность — 25 минут.
+        Создаёт таймер в состоянии CREATED. По умолчанию длительность - 25 минут.
         Таймер не запускается автоматически, для старта нужно вызвать `/timers/{id}/start`.
       operationId: createTimer
       requestBody:

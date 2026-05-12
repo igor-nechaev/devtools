@@ -6,9 +6,9 @@
 контейнера попадает в JSON-файл на хосте (`/var/lib/docker/containers/<id>/<id>-json.log`), и это даёт точку
 сбора.
 
-Поверх этого стоит **Promtail** он подключается к docker-сокету (`/var/run/docker.sock`), сам обнаруживает запущенные
-контейнеры через `docker_sd_configs`, читает их json-логи и отправляет в **Loki** по HTTP. На лейблы попадают имя
-контейнера, имя сервиса в compose и поток (`stdout`/`stderr`)  этого достаточно, чтобы фильтровать в LogQL.
+Поверх этого стоит **Grafana Alloy** (наследник Promtail). Он подключается к docker-сокету (`/var/run/docker.sock`),
+обнаруживает контейнеры через `discovery.docker`, читает их stdout и отправляет в **Loki** по HTTP. На лейблы попадают
+имя контейнера, имя сервиса в compose и поток (`stdout`/`stderr`) - этого достаточно, чтобы фильтровать в LogQL.
 
 **Loki** хранит логи в filesystem-storage и индексирует только по меткам; тело сообщения не индексируется, а сжимается в
 чанки. Для нашей лабы поднята single-instance конфигурация без шардирования и репликации (`replication_factor: 1`)
@@ -68,7 +68,7 @@ topk(5, sum by (action) (count_over_time({container="pomodoro-app"} |= "WARN" |=
 ## Запуск
 
 ```bash
-cd lab-4
+cd lab-5
 ./mvnw clean package
 docker compose up -d --build
 ```
@@ -77,6 +77,7 @@ docker compose up -d --build
 - Grafana: http://localhost:3000
 - Prometheus: http://localhost:9090
 - Loki API: http://localhost:3100
+- Alloy UI: http://localhost:12345
 
 ## Скриншоты
 
