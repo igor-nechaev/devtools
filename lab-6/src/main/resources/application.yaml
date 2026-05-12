@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: pomodoro-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pomodoro}
+    username: ${SPRING_DATASOURCE_USERNAME:pomodoro}
+    password: ${SPRING_DATASOURCE_PASSWORD:pomodoro}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+    metrics:
+      export:
+        enabled: false
+  observations:
+    annotations:
+      enabled: true

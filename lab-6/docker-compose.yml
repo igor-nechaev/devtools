@@ -1,0 +1,96 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: pomodoro-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: pomodoro
+      POSTGRES_USER: pomodoro
+      POSTGRES_PASSWORD: pomodoro
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pomodoro-app:
+    build: .
+    container_name: pomodoro-app
+    restart: always
+    depends_on:
+      - postgres
+      - tempo
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pomodoro
+      SPRING_DATASOURCE_USERNAME: pomodoro
+      SPRING_DATASOURCE_PASSWORD: pomodoro
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: pomodoro-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: pomodoro-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: pomodoro-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/config.yml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/config.yml
+
+  alloy:
+    image: grafana/alloy:v1.3.1
+    container_name: pomodoro-alloy
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    ports:
+      - "12345:12345"
+    depends_on:
+      - loki
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: pomodoro-tempo
+    command: [ "-config.file=/etc/tempo/tempo.yml" ]
+    volumes:
+      - ./tempo-config.yml:/etc/tempo/tempo.yml
+      - tempo_data:/var/tempo
+    ports:
+      - "3200:3200"   # tempo HTTP API (queries)
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+volumes:
+  pgdata:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  tempo_data:
