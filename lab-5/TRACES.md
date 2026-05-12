@@ -34,7 +34,7 @@ management:
 { resource.service.name = "pomodoro-service" }
 ```
 
-![Все трейсы приложения](traces-Все трейсы приложения.jpg)
+![All traces](traces-all.jpg)
 
 ### Дерево спанов при создании таймера
 
@@ -42,7 +42,7 @@ management:
 { resource.service.name = "pomodoro-service" && name = "pomodoro.create-timer" }
 ```
 
-![Трейс создания таймера](traces-Трейс создания таймера.jpg)
+![Create timer trace](traces-create-timer.jpg)
 
 ### Запросы, завершившиеся ошибкой
 
@@ -50,7 +50,7 @@ management:
 { resource.service.name = "pomodoro-service" && status = error }
 ```
 
-![Ошибочные трейсы](traces-Ошибочные трейсы.jpg)
+![Error traces](traces-errors.jpg)
 
 ### Запросы дольше 5 мс
 
@@ -58,7 +58,7 @@ management:
 { resource.service.name = "pomodoro-service" && duration > 5ms }
 ```
 
-![Медленные запросы](traces-Медленные запросы.jpg)
+![Slow requests](traces-slow-requests.jpg)
 
 ### История операций над одним таймером
 
@@ -66,10 +66,10 @@ management:
 { resource.service.name = "pomodoro-service" && span.timer.id = "1" }
 ```
 
-![Фильтрация по атрибуту timer.id](traces-Фильтрация по атрибуту timer id.jpg)
+![Filter by timer.id](traces-filter-by-timer-id.jpg)
 
 ### Переход из лога в трейс
 
 Формат лога включает `trace_id=<hex>` - Grafana показывает ссылку на соответствующий трейс в Tempo прямо из строки лога.
 
-![Корреляция логов и трейсов](traces-Корреляция логов и трейсов.jpg)
+![Log to trace correlation](traces-log-correlation.jpg)
